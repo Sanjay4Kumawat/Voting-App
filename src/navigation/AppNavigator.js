@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../screens/HomeScreen';
 import VotingScreen from '../screens/VotingScreen';
 import CreateSessionScreen from '../screens/CreateSessionScreen';
+import ResultScreen from '../screens/ResultScreen';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +28,10 @@ const AppNavigator = () => {
         <Stack.Screen 
           name="CreateSession" 
           component={CreateSessionScreen}
+        />
+        <Stack.Screen 
+          name="Result" 
+          component={ResultScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
