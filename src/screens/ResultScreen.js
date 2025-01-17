@@ -6,12 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 const ResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
@@ -32,6 +30,8 @@ const ResultScreen = ({ route, navigation }) => {
   const calculatePercentage = (votes) => {
     return (votes / votingResults.totalVotes) * 100;
   };
+
+  const winner = votingResults.options[0];
 
   return (
     <View style={styles.container}>
@@ -56,6 +56,17 @@ const ResultScreen = ({ route, navigation }) => {
         <View style={styles.totalVotesContainer}>
           <Text style={styles.totalVotesText}>
             Total Votes: {votingResults.totalVotes}
+          </Text>
+        </View>
+
+        {/* Winner Section */}
+        <View style={styles.winnerContainer}>
+          <Text style={styles.winnerTitle}>Winner</Text>
+          <Text style={[styles.winnerName, { color: winner.color }]}>
+            {winner.name}
+          </Text>
+          <Text style={styles.winnerVotes}>
+            {winner.votes} votes ({calculatePercentage(winner.votes).toFixed(1)}%)
           </Text>
         </View>
 
@@ -87,28 +98,6 @@ const ResultScreen = ({ route, navigation }) => {
               </View>
             );
           })}
-        </View>
-
-        {/* Winner Section */}
-        <View style={styles.winnerContainer}>
-          <Text style={styles.winnerTitle}>Winner</Text>
-          <Text style={styles.winnerName}>
-            {votingResults.options[0].name}
-          </Text>
-          <AnimatedCircularProgress
-            size={120}
-            width={15}
-            fill={calculatePercentage(votingResults.options[0].votes)}
-            tintColor={votingResults.options[0].color}
-            backgroundColor="#f0f0f0"
-            rotation={0}
-          >
-            {(fill) => (
-              <Text style={styles.winnerPercentage}>
-                {fill.toFixed(1)}%
-              </Text>
-            )}
-          </AnimatedCircularProgress>
         </View>
 
         {/* Action Buttons */}
@@ -281,13 +270,11 @@ const styles = StyleSheet.create({
   winnerName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF6B6B',
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  winnerPercentage: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+  winnerVotes: {
+    fontSize: 18,
+    color: '#666',
   },
   actionButtons: {
     flexDirection: 'row',
