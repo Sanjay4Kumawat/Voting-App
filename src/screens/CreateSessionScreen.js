@@ -8,20 +8,24 @@ import {
   Platform,
   Alert,
   ScrollView,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  Switch
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { StatusBar } from 'expo-status-bar';
+import { useVoting } from '../context/VotingContext';
 
 const CreateSessionScreen = ({ navigation }) => {
+  const { addSession } = useVoting();
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [options, setOptions] = useState(['', '']); // Minimum 2 options
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResults, setShowResults] = useState(true); // New state for results visibility
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -66,7 +70,16 @@ const CreateSessionScreen = ({ navigation }) => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    // Here you would typically make an API call to create the session
+    
+    const newSession = {
+      title,
+      date,
+      options: options.filter(opt => opt.trim().length > 0),
+      showResults, // Include the showResults preference
+    };
+
+    const createdSession = addSession(newSession);
+    
     setTimeout(() => {
       setIsSubmitting(false);
       Alert.alert(
@@ -126,6 +139,28 @@ const CreateSessionScreen = ({ navigation }) => {
               </Text>
               <MaterialIcons name="calendar-today" size={20} color="#666" />
             </TouchableOpacity>
+          </View>
+
+          {/* Show Results Toggle */}
+          <View style={styles.toggleContainer}>
+            <Text style={styles.label}>Show Results After Voting</Text>
+            <View style={styles.toggleWrapper}>
+              <Text style={styles.toggleLabel}>
+                {showResults ? 'Visible' : 'Hidden'}
+              </Text>
+              <Switch
+                value={showResults}
+                onValueChange={setShowResults}
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
+                thumbColor={showResults ? '#007AFF' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+              />
+            </View>
+            <Text style={styles.toggleDescription}>
+              {showResults 
+                ? 'Voters will see results after casting their vote'
+                : 'Results will be hidden until voting ends'}
+            </Text>
           </View>
 
           {/* Voting Options */}
@@ -328,6 +363,39 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  toggleContainer: {
+    marginBottom: 24,
+  },
+  toggleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  toggleLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  toggleDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });
 

@@ -11,24 +11,16 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useVoting } from '../context/VotingContext';
 
 const VotingScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
   const { sessionId } = route.params;
+  const { getSession, addVote } = useVoting();
   const [selectedOption, setSelectedOption] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
 
-  // Mock data - replace with your actual data
-  const votingSession = {
-    title: "Best Programming Language",
-    options: [
-      { id: 1, text: "Python", votes: 45 },
-      { id: 2, text: "JavaScript", votes: 30 },
-      { id: 3, text: "Java", votes: 15 },
-      { id: 4, text: "C++", votes: 10 },
-    ],
-    totalVotes: 100
-  };
+  const session = getSession(sessionId);
 
   const handleVote = () => {
     if (!selectedOption) {
@@ -36,12 +28,19 @@ const VotingScreen = ({ route, navigation }) => {
       return;
     }
 
+    addVote(sessionId, selectedOption);
     setHasVoted(true);
-    // Here you would typically make an API call to submit the vote
-  };
-
-  const calculatePercentage = (votes) => {
-    return `${Math.round((votes / votingSession.totalVotes) * 100)}%`;
+    
+    Alert.alert(
+      'Thank You!',
+      'Your vote has been recorded successfully. You can view the results from the home screen.',
+      [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('Home')
+        }
+      ]
+    );
   };
 
   return (
@@ -56,67 +55,42 @@ const VotingScreen = ({ route, navigation }) => {
         >
           <MaterialIcons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{votingSession.title}</Text>
+        <Text style={styles.headerTitle}>{session.title}</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {/* Voting Options */}
         <View style={styles.optionsContainer}>
-          {votingSession.options.map((option) => (
+          {session.options.map((option) => (
             <TouchableOpacity
               key={option.id}
               style={[
                 styles.optionButton,
-                selectedOption === option.id && styles.selectedOption,
-                hasVoted && styles.votedOption
+                selectedOption === option.id && styles.selectedOption
               ]}
-              onPress={() => !hasVoted && setSelectedOption(option.id)}
-              disabled={hasVoted}
+              onPress={() => setSelectedOption(option.id)}
             >
               <Text style={[
                 styles.optionText,
-                hasVoted && { marginBottom: 8 }
-              ]}>{option.text}</Text>
-              {hasVoted && (
-                <View style={styles.resultBar}>
-                  <View 
-                    style={[
-                      styles.resultFill,
-                      { width: calculatePercentage(option.votes) }
-                    ]} 
-                  />
-                  <Text style={styles.percentageText}>
-                    {calculatePercentage(option.votes)}
-                  </Text>
-                </View>
-              )}
+                selectedOption === option.id && styles.selectedOptionText
+              ]}>
+                {option.text}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Vote Button */}
-        {!hasVoted && (
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              !selectedOption && styles.submitButtonDisabled
-            ]}
-            onPress={handleVote}
-            disabled={!selectedOption}
-          >
-            <Text style={styles.submitButtonText}>Submit Vote</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Results Summary */}
-        {hasVoted && (
-          <View style={styles.summaryContainer}>
-            <Text style={styles.summaryTitle}>Thank you for voting!</Text>
-            <Text style={styles.summaryText}>
-              Total votes: {votingSession.totalVotes}
-            </Text>
-          </View>
-        )}
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            !selectedOption && styles.submitButtonDisabled
+          ]}
+          onPress={handleVote}
+          disabled={!selectedOption}
+        >
+          <Text style={styles.submitButtonText}>Submit Vote</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -183,36 +157,13 @@ const styles = StyleSheet.create({
     borderColor: '#007AFF',
     borderWidth: 2,
   },
-  votedOption: {
-    backgroundColor: '#FFFFFF',
-  },
   optionText: {
     fontSize: 16,
     color: '#333',
     marginBottom: 0,
   },
-  resultBar: {
-    height: 24,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 12,
-    marginTop: 8,
-    overflow: 'hidden',
-  },
-  resultFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    backgroundColor: '#A8D5FF',
-    borderRadius: 12,
-  },
-  percentageText: {
-    position: 'absolute',
-    right: 8,
-    top: 4,
-    fontSize: 12,
+  selectedOptionText: {
     fontWeight: 'bold',
-    color: '#333',
   },
   submitButton: {
     backgroundColor: '#007AFF',
@@ -229,23 +180,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  summaryContainer: {
-    backgroundColor: '#E3EEFF',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  summaryText: {
-    fontSize: 14,
-    color: '#666',
   },
 });
 

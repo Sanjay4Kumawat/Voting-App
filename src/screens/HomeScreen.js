@@ -3,54 +3,70 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Pla
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FAB } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
+import { useVoting } from '../context/VotingContext';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const HomeScreen = ({ navigation }) => {
+  const { sessions, hasVoted, isResultRevealed } = useVoting();
   const insets = useSafeAreaInsets();
-
-  // Mock data for voting sessions
-  const sessions = [
-    {
-      id: '1',
-      title: 'Best Programming Language',
-      createdAt: 'March 15, 2024',
-    },
-    {
-      id: '2',
-      title: 'Favorite Movie of 2024',
-      createdAt: 'March 14, 2024',
-    },
-    {
-      id: '3',
-      title: 'Best Pizza Topping',
-      createdAt: 'March 13, 2024',
-    },
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" backgroundColor="#E9F5FF" />
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
-        <Text style={styles.headerTitle}>VotingApp</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>VotingApp</Text>
+          <TouchableOpacity
+            style={styles.createdVotesButton}
+            onPress={() => navigation.navigate('CreatedVotes')}
+          >
+            <MaterialIcons name="poll" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Session List */}
       <ScrollView style={styles.scrollView}>
         {sessions.map((session) => (
-          <TouchableOpacity
-            key={session.id}
-            style={styles.card}
-            onPress={() => navigation.navigate('Voting', { sessionId: session.id })}
-          >
+          <View key={session.id} style={styles.card}>
             <Text style={styles.cardTitle}>{session.title}</Text>
             <Text style={styles.cardDate}>{session.createdAt}</Text>
-            <TouchableOpacity
-              style={styles.voteButton}
-              onPress={() => navigation.navigate('Voting', { sessionId: session.id })}
-            >
-              <Text style={styles.voteButtonText}>Vote Now</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
+            
+            <View style={styles.buttonContainer}>
+              {!hasVoted(session.id) ? (
+                <TouchableOpacity
+                  style={[styles.button, styles.voteButton]}
+                  onPress={() => navigation.navigate('Voting', { sessionId: session.id })}
+                >
+                  <MaterialIcons name="how-to-vote" size={20} color="#333333" />
+                  <Text style={styles.buttonText}>Vote Now</Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.button, styles.votedButton]}
+                    disabled={true}
+                  >
+                    <MaterialIcons name="check-circle" size={20} color="#4CAF50" />
+                    <Text style={[styles.buttonText, styles.votedButtonText]}>Voted</Text>
+                  </TouchableOpacity>
+
+                  {isResultRevealed(session.id) && (
+                    <TouchableOpacity
+                      style={[styles.button, styles.resultsButton]}
+                      onPress={() => navigation.navigate('Result', { sessionId: session.id })}
+                    >
+                      <MaterialIcons name="bar-chart" size={20} color="#007AFF" />
+                      <Text style={[styles.buttonText, styles.resultsButtonText]}>
+                        Results
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+            </View>
+          </View>
         ))}
       </ScrollView>
 
@@ -72,22 +88,26 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#E9F5FF',
-    padding: 16,
-    alignItems: 'center',
     ...Platform.select({
-      ios: { 
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 2 }, 
-        shadowOpacity: 0.1, 
-        shadowRadius: 3 
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
       },
-      android: { 
-        elevation: 3 
+      android: {
+        elevation: 3,
       },
     }),
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333333',
   },
@@ -116,16 +136,33 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginBottom: 16,
   },
-  voteButton: {
-    backgroundColor: '#FFFFFF',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    gap: 8,
   },
-  voteButtonText: {
-    color: '#333333',
-    fontWeight: '600',
+  voteButton: {
+    backgroundColor: '#E9F5FF',
+  },
+  resultsButton: {
+    backgroundColor: '#F0F0F0',
+  },
+  buttonText: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  resultsButtonText: {
+    color: '#007AFF',
   },
   fab: {
     position: 'absolute',
@@ -146,6 +183,16 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: '#333333',
     fontWeight: 'bold',
+  },
+  votedButton: {
+    backgroundColor: '#E8F5E9',
+    flex: 1,
+  },
+  votedButtonText: {
+    color: '#4CAF50',
+  },
+  createdVotesButton: {
+    padding: 8,
   },
 });
 

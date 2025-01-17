@@ -1,9 +1,18 @@
 import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
-// Ensure the correct path to AppNavigator
+import { VotingProvider } from './src/context/VotingContext';
 
-const App = () => {
-  return <AppNavigator />;  // Rendering the AppNavigator to manage navigation
-};
+function App() {
+  return (
+    <SafeAreaProvider>
+      <VotingProvider>
+        <AppNavigator />
+        <StatusBar style="auto" />
+      </VotingProvider>
+    </SafeAreaProvider>
+  );
+}
 
 export default App;

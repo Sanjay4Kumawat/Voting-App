@@ -10,28 +10,23 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useVoting } from '../context/VotingContext';
 
 const ResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
   const { sessionId } = route.params;
+  const { getSession } = useVoting();
 
-  // Mock data - replace with your actual data
-  const votingResults = {
-    title: "Best Programming Language",
-    totalVotes: 100,
-    options: [
-      { id: 1, name: "Python", votes: 45, color: '#FF6B6B' },
-      { id: 2, name: "JavaScript", votes: 30, color: '#4ECDC4' },
-      { id: 3, name: "Java", votes: 15, color: '#45B7D1' },
-      { id: 4, name: "C++", votes: 10, color: '#96CEB4' },
-    ]
+  const session = getSession(sessionId);
+
+  const calculateTotalVotes = () => {
+    return session.options.reduce((sum, option) => sum + option.votes, 0);
   };
 
   const calculatePercentage = (votes) => {
-    return (votes / votingResults.totalVotes) * 100;
+    const totalVotes = calculateTotalVotes();
+    return totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
   };
-
-  const winner = votingResults.options[0];
 
   return (
     <View style={styles.container}>
@@ -50,54 +45,37 @@ const ResultScreen = ({ route, navigation }) => {
 
       <ScrollView style={styles.content}>
         {/* Title */}
-        <Text style={styles.sessionTitle}>{votingResults.title}</Text>
+        <Text style={styles.sessionTitle}>{session.title}</Text>
         
         {/* Total Votes */}
         <View style={styles.totalVotesContainer}>
           <Text style={styles.totalVotesText}>
-            Total Votes: {votingResults.totalVotes}
-          </Text>
-        </View>
-
-        {/* Winner Section */}
-        <View style={styles.winnerContainer}>
-          <Text style={styles.winnerTitle}>Winner</Text>
-          <Text style={[styles.winnerName, { color: winner.color }]}>
-            {winner.name}
-          </Text>
-          <Text style={styles.winnerVotes}>
-            {winner.votes} votes ({calculatePercentage(winner.votes).toFixed(1)}%)
+            Total Votes: {calculateTotalVotes()}
           </Text>
         </View>
 
         {/* Results */}
         <View style={styles.resultsContainer}>
-          {votingResults.options.map((option) => {
-            const percentage = calculatePercentage(option.votes);
-            return (
-              <View key={option.id} style={styles.resultItem}>
-                <View style={styles.resultHeader}>
-                  <Text style={styles.optionName}>{option.name}</Text>
-                  <Text style={styles.voteCount}>{option.votes} votes</Text>
-                </View>
-                
-                <View style={styles.progressContainer}>
-                  <View 
-                    style={[
-                      styles.progressBar,
-                      { 
-                        width: `${percentage}%`,
-                        backgroundColor: option.color 
-                      }
-                    ]} 
-                  />
-                  <Text style={styles.percentageText}>
-                    {percentage.toFixed(1)}%
-                  </Text>
-                </View>
+          {session.options.map((option) => (
+            <View key={option.id} style={styles.resultItem}>
+              <View style={styles.resultHeader}>
+                <Text style={styles.optionName}>{option.text}</Text>
+                <Text style={styles.voteCount}>{option.votes} votes</Text>
               </View>
-            );
-          })}
+              
+              <View style={styles.progressContainer}>
+                <View 
+                  style={[
+                    styles.progressBar,
+                    { 
+                      width: `${calculatePercentage(option.votes)}%`,
+                      backgroundColor: '#4ECDC4'
+                    }
+                  ]} 
+                />
+              </View>
+            </View>
+          ))}
         </View>
 
         {/* Action Buttons */}
@@ -107,13 +85,6 @@ const ResultScreen = ({ route, navigation }) => {
             onPress={() => navigation.navigate('Home')}
           >
             <Text style={styles.actionButtonText}>Back to Home</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#FF6B6B' }]}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.actionButtonText}>Vote Again</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -227,6 +198,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
+    marginTop: 8,
   },
   progressBar: {
     position: 'absolute',
@@ -234,47 +206,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 12,
-  },
-  percentageText: {
-    position: 'absolute',
-    right: 8,
-    top: 4,
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  winnerContainer: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 12,
-    marginBottom: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  winnerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  winnerName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  winnerVotes: {
-    fontSize: 18,
-    color: '#666',
   },
   actionButtons: {
     flexDirection: 'row',
