@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sanjay_kumawat.VotingApp"
+      "package": "com.sanjay_kumawat.VotingApp",
+      "buildType": "apk" // Ensure APK is built
     },
     "web": {
       "favicon": "./assets/Voting.png"
